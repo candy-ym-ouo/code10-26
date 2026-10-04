@@ -21,10 +21,12 @@
 |---|---|---|
 | POST | `/auth/register` | 注册并返回 Access Token，同时设置 Refresh Cookie |
 | POST | `/auth/login` | 登录并轮换 Refresh Cookie |
-| POST | `/auth/refresh` | 使用 Cookie 轮换刷新令牌 |
+| POST | `/auth/refresh` | 使用 Cookie 原子轮换刷新令牌 |
 | POST | `/auth/logout` | 撤销当前 Refresh Session 并清除 Cookie |
 
 Refresh Cookie 路径为 `/api/v1/auth`，生产环境在 HTTPS 下自动使用 `Secure`。
+
+刷新令牌采用一次性轮换（rotation）与会话族（family）模型：每次刷新原子地撤销旧令牌并签发同族后继令牌，旧令牌只能成功使用一次。无论是顺序重放还是并发竞争，旧令牌的第二次出现都视为令牌泄露，服务端会撤销该会话族内全部有效会话（含刚签发的后继）并清除 Cookie，客户端须重新登录；复用事件会写入审计日志（`AUTH_REFRESH_REUSE`）。
 
 ## 用户与设置
 
