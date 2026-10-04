@@ -26,6 +26,8 @@
 
 Refresh Cookie 路径为 `/api/v1/auth`，生产环境在 HTTPS 下自动使用 `Secure`。
 
+刷新令牌每次使用后立即轮换：服务端以数据库原子条件更新认领旧令牌（`WHERE revoked_at IS NULL`），因此同一令牌在并发请求下也只能成功轮换一次。第二次使用（包括并发重复请求）即判定为令牌复用，服务端会在同一事务内撤销该会话族（`family_id`）下的全部 Refresh Session、清除 Cookie 并写入 `AUTH_REFRESH_REUSE` 审计日志，客户端必须重新登录。
+
 ## 用户与设置
 
 | 方法 | 路径 | 说明 |
